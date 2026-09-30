@@ -1,4 +1,4 @@
-MACRO (InstallExternalLib ExternalLib ExternalLibTarget)
+MACRO (InstallExternalLib ExternalLib ExternalLibTarget ExternalLibBuildInstallLocation ExternalLibReleaseInstallLocation)
 
     CMAKE_PARSE_ARGUMENTS(InstallExternalLib
         ""
@@ -6,6 +6,17 @@ MACRO (InstallExternalLib ExternalLib ExternalLibTarget)
         ""
         ${ARGN}
     )
+
+    # Set default values if the user omitted the keyword
+    set(BuildInstallLocation "${CMAKE_BINARY_DIR}/lib")
+    set(ReleaseInstallLocation "lib")
+    if(NOT "${ExternalLibBuildInstallLocation}" STREQUAL "")
+        set(BuildInstallLocation "${ExternalLibBuildInstallLocation}")
+    endif()
+    if(NOT "${ExternalLibReleaseInstallLocation}" STREQUAL "")
+        set(ReleaseInstallLocation "${ExternalLibReleaseInstallLocation}")
+        MESSAGE(STATUS "Setting release install location: ${ExternalLibReleaseInstallLocation}")
+    endif()
 
     get_target_property(target_LIB ${ExternalLibTarget} LOCATION)
     get_filename_component(target_DIRECTORY ${target_LIB} DIRECTORY)
@@ -22,12 +33,12 @@ MACRO (InstallExternalLib ExternalLib ExternalLibTarget)
         COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/lib"
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
                 ${${ExternalLib}_LIBS}
-                "${CMAKE_BINARY_DIR}/lib"
+                "${BuildInstallLocation}"
         COMMENT "Copying dependent libraries to build directory"
     )
 
     install(FILES
         ${${ExternalLib}_LIBS}
-        DESTINATION lib
+        DESTINATION ${ReleaseInstallLocation}
     )
 ENDMACRO ()
